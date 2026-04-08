@@ -1,4 +1,4 @@
-timescale 1ns / 1ps
+`timescale 1ns / 1ps
 module tb;
     reg clk;
     reg rst;
@@ -37,8 +37,8 @@ module tb;
     always #5 clk = ~clk; // Clock generation
     
     initial begin 
-        $monitor ("Time: %0t | Sensor A: %b | Sensor B: %b | Enter: %b | Exit: %b | Count: %d | S0: %b | S1: %b | S2: %b | S3: %b | FULL: %b | EMPTY: %b | SENSOR_A: %b | SENSOR_B: %b", 
-                 $time, sensor_a, sensor_b, enter, exit, count, led_S0, led_S1, led_S2, led_S3, led_FULL, led_EMPTY, led_sensor_a, led_sensor_b);
+        $monitor ("Time: %0t | Sensor A: %b | Sensor B: %b | Enter: %b | Exit: %b | Count: %d | S0: %b | S1: %b | S2: %b | S3: %b", 
+                 $time, sensor_a, sensor_b, enter, exit, count, led_S0, led_S1, led_S2, led_S3);
         end
     // In sự kiện
     always @(posedge clk) begin
