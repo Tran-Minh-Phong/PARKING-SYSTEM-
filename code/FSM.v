@@ -11,7 +11,9 @@ module PARKINGSYSTEM(
     output led_S2,
     output led_S3,
     output led_FULL,
-    output led_EMPTY
+    output led_EMPTY,
+    output led_sensor_a,
+    output led_sensor_b
     );
     
     reg [1:0] current_state;
@@ -103,4 +105,6 @@ module PARKINGSYSTEM(
     assign led_S3 = (current_state == S3);
     assign led_FULL = full; // Đèn FULL sáng khi đếm đạt 15
     assign led_EMPTY = (count == 0); // Đèn EMPTY sáng khi đếm đạt 0
+    assign led_sensor_a = sensor_a; // Đèn LED phản ánh trạng thái cảm biến A
+    assign led_sensor_b = sensor_b; // Đèn LED phản ánh trạng thái cảm biến B
 endmodule
