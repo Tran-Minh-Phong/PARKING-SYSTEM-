@@ -1,0 +1,67 @@
+module clock_enable(
+    input clk,          // clock chính (50MHz)
+    input reset,
+    output reg en_1ms,  // xung mỗi 1ms
+    output reg en_10ms, // xung mỗi 10ms
+    output reg en_1s    // xung mỗi 1 giây
+);
+
+    reg [31:0] cnt_1ms;
+    reg [31:0] cnt_10ms;
+    reg [31:0] cnt_1s;
+
+    // =====================
+    // 1ms
+    // =====================
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            cnt_1ms <= 0;
+            en_1ms <= 0;
+        end else begin
+            if (cnt_1ms == 50_000 - 1) begin // 50MHz → 1ms
+                cnt_1ms <= 0;
+                en_1ms <= 1;
+            end else begin
+                cnt_1ms <= cnt_1ms + 1;
+                en_1ms <= 0;
+            end
+        end
+    end
+
+    // =====================
+    // 10ms
+    // =====================
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            cnt_10ms <= 0;
+            en_10ms <= 0;
+        end else begin
+            if (cnt_10ms == 500_000 - 1) begin
+                cnt_10ms <= 0;
+                en_10ms <= 1;
+            end else begin
+                cnt_10ms <= cnt_10ms + 1;
+                en_10ms <= 0;
+            end
+        end
+    end
+
+    // =====================
+    // 1s
+    // =====================
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            cnt_1s <= 0;
+            en_1s <= 0;
+        end else begin
+            if (cnt_1s == 50_000_000 - 1) begin
+                cnt_1s <= 0;
+                en_1s <= 1;
+            end else begin
+                cnt_1s <= cnt_1s + 1;
+                en_1s <= 0;
+            end
+        end
+    end
+
+endmodule
