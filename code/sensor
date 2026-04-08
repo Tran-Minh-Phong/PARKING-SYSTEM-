@@ -1,0 +1,84 @@
+module sensor_gate_control(
+    input clk,
+    input reset,
+    input a_raw,   // sensor A
+    input b_raw,   // sensor B
+    input en_1ms, 
+
+    output reg a_clean,
+    output reg b_clean,
+    output reg open_gate
+);
+    // 1. SYNC SENSOR
+
+    reg a1, a2;
+    reg b1, b2;
+
+    always @(posedge clk) begin
+        a1 <= a_raw;
+        a2 <= a1;
+
+        b1 <= b_raw;
+        b2 <= b1;
+    end
+
+    // 2. DEBOUNCE
+
+    reg [2:0] shift_a, shift_b;
+
+    always @(posedge clk) begin
+        if (en_1ms) begin
+            shift_a <= {shift_a[1:0], a2};
+            shift_b <= {shift_b[1:0], b2};
+
+            // a_clean
+            if (shift_a == 3'b111)
+                a_clean <= 1;
+            else if (shift_a == 3'b000)
+                a_clean <= 0;
+
+            // b_clean
+            if (shift_b == 3'b111)
+                b_clean <= 1;
+            else if (shift_b == 3'b000)
+                b_clean <= 0;
+        end
+    end
+
+
+    // 3. PHÁT HIỆN XE (trigger)
+ 
+    reg a_prev, b_prev;
+    wire trigger;
+
+    always @(posedge clk) begin
+        a_prev <= a_clean;
+        b_prev <= b_clean;
+    end
+
+    assign trigger = (a_clean & ~a_prev) | (b_clean & ~b_prev);
+    // phát hiện cạnh lên (có xe)
+
+    // 4. ĐIỀU KHIỂN THANH CHẮN
+    reg [15:0] delay_cnt;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            open_gate <= 0;
+            delay_cnt <= 0;
+        end else begin
+            if (trigger) begin
+                open_gate <= 1;   // mở cổng
+                delay_cnt <= 0;
+            end
+            else if (open_gate && en_1ms) begin
+                delay_cnt <= delay_cnt + 1;
+
+                if (delay_cnt == 2000) begin
+                    open_gate <= 0; // đóng sau ~2s
+                end
+            end
+        end
+    end
+
+endmodule
