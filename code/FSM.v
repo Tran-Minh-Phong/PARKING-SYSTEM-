@@ -5,12 +5,20 @@ module PARKINGSYSTEM(
     input sensor_b,
     output reg enter,
     output reg exit,
-    output reg [3:0] count
+    output reg [3:0] count,
+    output led_S0,
+    output led_S1,
+    output led_S2,
+    output led_S3,
+    output led_FULL,
+    output led_EMPTY
     );
     
-    reg [2:0] current_state;
-    reg [2:0] next_state;
+    reg [1:0] current_state;
+    reg [1:0] next_state;
     reg DIR; // 1: xe vào, 0: xe ra
+    wire full;
+    assign full=(count == 15);
     
     parameter S0 = 2'b00; //  không có cảm biến nào bật
     parameter S1 = 2'b01; //  1 cảm biến bật (có 1 xe vào hoặc ra) 
@@ -31,7 +39,10 @@ module PARKINGSYSTEM(
         next_state = current_state; // Giữ nguyên trạng thái nếu không có thay đổi
             case (current_state)
                 S0: begin
-                if (sensor_a ^ sensor_b) next_state = S1;
+                if (sensor_a ^ sensor_b) begin 
+                    if (sensor_a && full) next_state = S0; // không cho xe vào nếu đã đầy
+                    else next_state = S1;   
+                    end
                 end
                 S1: begin
                 if (sensor_a & sensor_b) next_state = S2;
@@ -48,11 +59,7 @@ module PARKINGSYSTEM(
                 end
                 S3: begin
                 case ({sensor_a ,sensor_b})
-                    2'b00: begin
-                        next_state = S0;
-                        if(DIR) enter=1;
-                        else    exit=1;
-                    end
+                    2'b00: next_state = S0;
                     2'b11: next_state = S2;
                     default: next_state = S3; // vẫn ở trạng thái S3 nếu chỉ có 1 cảm biến bật
                 endcase
@@ -64,8 +71,8 @@ module PARKINGSYSTEM(
     always @(posedge clk or posedge rst) begin
         if (rst) DIR <= IN;
         else if (current_state == S0 && next_state == S1) begin
-                if (sensor_a) DIR <= IN; // xe vào
-                else if (sensor_b) DIR <= OUT; // xe ra
+                if (sensor_a && !sensor_b) DIR <= IN; // xe vào
+                else if (!sensor_a && sensor_b) DIR <= OUT; // xe ra
         end 
     end
     // 4. Cập nhật tín hiệu enter và exit
@@ -89,4 +96,11 @@ module PARKINGSYSTEM(
         else if (enter && count < 15) count <= count + 1; //
         else if (exit && count > 0) count <= count - 1; //
     end
+    // 6. Cập nhật trạng thái đèn LED
+    assign led_S0 = (current_state == S0);  
+    assign led_S1 = (current_state == S1);
+    assign led_S2 = (current_state == S2);
+    assign led_S3 = (current_state == S3);
+    assign led_FULL = full; // Đèn FULL sáng khi đếm đạt 15
+    assign led_EMPTY = (count == 0); // Đèn EMPTY sáng khi đếm đạt 0
 endmodule
