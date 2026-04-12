@@ -5,15 +5,8 @@ module PARKINGSYSTEM(
     input sensor_b,
     output reg enter,
     output reg exit,
-    output reg [3:0] count,
-    output led_S0,
-    output led_S1,
-    output led_S2,
-    output led_S3,
-    output led_FULL,
-    output led_EMPTY,
-    output led_sensor_a,
-    output led_sensor_b
+    output reg [3:0] count
+
     );
     
     reg [1:0] current_state;
@@ -30,8 +23,8 @@ module PARKINGSYSTEM(
     parameter OUT = 1'b0; // xe ra
     
     // 1. Cập nhật trạng thái hiện tại
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge rst) begin
+        if (!rst) begin
             current_state <= S0;
         end  
         else current_state <= next_state;
@@ -70,16 +63,16 @@ module PARKINGSYSTEM(
             endcase
     end
     // 3. xác định hướng di chuyển của xe
-    always @(posedge clk or posedge rst) begin
-        if (rst) DIR <= IN;
+    always @(posedge clk or negedge rst) begin
+        if (!rst) DIR <= IN;
         else if (current_state == S0 && next_state == S1) begin
                 if (sensor_a && !sensor_b) DIR <= IN; // xe vào
                 else if (!sensor_a && sensor_b) DIR <= OUT; // xe ra
         end 
     end
     // 4. Cập nhật tín hiệu enter , exit và đếm xe
-    always @(posedge clk or posedge rst) begin
-    if (rst) begin
+    always @(posedge clk or negedge rst) begin
+    if (!rst) begin
         enter <= 0;
         exit  <= 0;
         count <= 0;
@@ -99,13 +92,4 @@ module PARKINGSYSTEM(
         end
     end
 end
-    // 5. Cập nhật trạng thái đèn LED
-    assign led_S0 = (current_state == S0);  
-    assign led_S1 = (current_state == S1);
-    assign led_S2 = (current_state == S2);
-    assign led_S3 = (current_state == S3);
-    assign led_FULL = full; // Đèn FULL sáng khi đếm đạt 15
-    assign led_EMPTY = (count == 0); // Đèn EMPTY sáng khi đếm đạt 0
-    assign led_sensor_a = sensor_a; // Đèn LED phản ánh trạng thái cảm biến A
-    assign led_sensor_b = sensor_b; // Đèn LED phản ánh trạng thái cảm biến B
 endmodule
